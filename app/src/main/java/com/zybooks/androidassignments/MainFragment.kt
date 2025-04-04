@@ -43,10 +43,9 @@ class MainFragment : Fragment() {
         addButton = view.findViewById(R.id.add)
         recyclerView = view.findViewById(R.id.expenses)
 
-        adapter = ExpenseAdapter(expenses) {
+        adapter = ExpenseAdapter(expenses){
             saveExpensesToFile()
         }
-
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 

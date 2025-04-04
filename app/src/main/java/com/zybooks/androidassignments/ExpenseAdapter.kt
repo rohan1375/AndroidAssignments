@@ -5,6 +5,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.TextView
+import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
 
 class ExpenseAdapter(
@@ -12,10 +13,9 @@ class ExpenseAdapter(
     private val onItemDeleted: () -> Unit
 ) : RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
 
-
     inner class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val nameView: TextView = itemView.findViewById(R.id.name)
-        val amountView: TextView = itemView.findViewById(R.id.totalAmount)
+        val name: TextView = itemView.findViewById(R.id.name)
+        val amount: TextView = itemView.findViewById(R.id.totalAmount)
         val deleteButton: Button = itemView.findViewById(R.id.delete)
     }
 
@@ -28,15 +28,21 @@ class ExpenseAdapter(
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
         val expense = expenseList[position]
 
-        holder.nameView.text = expense.name
-        holder.amountView.text = expense.totalAmount
+        holder.name.text = expense.name
+        holder.amount.text = expense.totalAmount
+
+        holder.itemView.setOnClickListener {
+            val action = MainFragmentDirections
+                .actionMainFragmentToExpenseDetailsFragment(expense.name, expense.totalAmount)
+            holder.itemView.findNavController().navigate(action)
+        }
 
         holder.deleteButton.setOnClickListener {
             val pos = holder.adapterPosition
             if (pos != RecyclerView.NO_POSITION) {
                 expenseList.removeAt(pos)
                 notifyItemRemoved(pos)
-            onItemDeleted()  // save the updated file that when the app re-starts it save the changes
+                onItemDeleted() // Save the updated list to file
             }
         }
     }
