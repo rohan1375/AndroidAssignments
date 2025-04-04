@@ -8,8 +8,10 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.zybooks.androidassignments.R
@@ -144,17 +146,29 @@ class MainFragment : Fragment() {
 
     // Save expenses to file
     private fun saveExpensesToFile() {
-        fileJob = CoroutineScope(Dispatchers.IO).launch {
+        lifecycleScope.launch {
             try {
-                val json = gson.toJson(expenses)
-                requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
-                    it.write(json.toByteArray())
+                // Background operation to save expenses to file
+                withContext(Dispatchers.IO) {
+                    val json = gson.toJson(expenses)
+                    requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
+                        it.write(json.toByteArray())
+                    }
+                }
+
+                // Show success message on the main thread
+                withContext(Dispatchers.Main) {
+                    Snackbar.make(requireView(), "Expenses saved successfully.", Snackbar.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                Log.e("MainFragment", "Error saving file: ${e.message}")
+                // Handle errors on the main thread
+                withContext(Dispatchers.Main) {
+                    Snackbar.make(requireView(), "Error saving file: ${e.message}", Snackbar.LENGTH_LONG).show()
+                }
             }
         }
     }
+
 
     // Load expenses from file
     private fun loadExpensesFromFile() {
