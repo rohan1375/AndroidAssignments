@@ -1,16 +1,9 @@
 package com.zybooks.androidassignments.network
 
-import retrofit2.Retrofit
-import retrofit2.converter.gson.GsonConverterFactory
+import com.zybooks.androidassignments.model.CurrencyResponse
+import retrofit2.http.GET
 
-object CurrencyApi {
-    private const val BASE_URL = "https://api.exchangerate.host/"
-
-    val api: CurrencyApi by lazy {
-        Retrofit.Builder()
-            .baseUrl(BASE_URL)
-            .addConverterFactory(GsonConverterFactory.create())
-            .build()
-            .create(CurrencyApi::class.java)
-    }
+interface CurrencyApi {
+    @GET("v6/latest/USD")  // This is the correct endpoint for getting currency rates
+    suspend fun getRates(): CurrencyResponse
 }
