@@ -1,6 +1,5 @@
 package com.zybooks.androidassignments
 
-import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,14 +8,15 @@ import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
 class ExpenseAdapter(
-    private val expenseList: MutableList<Expense>
+    private val expenseList: MutableList<Expense>,
+    private val onItemDeleted: () -> Unit
 ) : RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
+
 
     inner class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val nameView: TextView = itemView.findViewById(R.id.name)
         val amountView: TextView = itemView.findViewById(R.id.totalAmount)
         val deleteButton: Button = itemView.findViewById(R.id.delete)
-        val detailsButton: Button = itemView.findViewById(R.id.showDetails)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
@@ -36,15 +36,8 @@ class ExpenseAdapter(
             if (pos != RecyclerView.NO_POSITION) {
                 expenseList.removeAt(pos)
                 notifyItemRemoved(pos)
+            onItemDeleted()  // save the updated file that when the app re-starts it save the changes
             }
-        }
-
-        holder.detailsButton.setOnClickListener {
-            val context = holder.itemView.context
-            val intent = Intent(context, ExpenseDetailsActivity::class.java)
-            intent.putExtra("expenseName", expense.name)
-            intent.putExtra("expenseAmount", expense.totalAmount)
-            context.startActivity(intent)
         }
     }
 
