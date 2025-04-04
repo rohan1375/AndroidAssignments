@@ -7,5 +7,23 @@
     <fragment
         android:id="@+id/mainFragment"
         android:name="com.zybooks.androidassignments.MainFragment"
-        android:label="MainFragment" />
+        android:label="MainFragment" >
+        <action
+            android:id="@+id/action_mainFragment_to_expenseDetailsFragment"
+            app:destination="@id/expenseDetailsFragment"
+            app:enterAnim="@android:anim/slide_in_left"
+            app:exitAnim="@android:anim/slide_out_right"/>
+    </fragment>
+
+    <fragment
+        android:id="@+id/expenseDetailsFragment"
+        android:name="com.zybooks.androidassignments.ExpenseDetailsFragment"
+        android:label="ExpenseDetailsFragment">
+        <argument
+            android:name="expenseName"
+            app:argType="string" />
+        <argument
+            android:name="expenseAmount"
+            app:argType="string" />
+    </fragment>
 </navigation>
