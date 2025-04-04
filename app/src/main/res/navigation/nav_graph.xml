@@ -6,7 +6,7 @@
 
     <fragment
         android:id="@+id/mainFragment"
-        android:name="com.zybooks.androidassignments.MainFragment"
+        android:name="com.zybooks.androidassignments.ui.MainFragment"
         android:label="MainFragment" >
         <action
             android:id="@+id/action_mainFragment_to_expenseDetailsFragment"

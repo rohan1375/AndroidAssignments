@@ -1,4 +1,4 @@
-package com.zybooks.androidassignments
+package com.zybooks.androidassignments.model
 
 data class Expense(
     val name: String,

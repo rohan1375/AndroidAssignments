@@ -1,4 +1,4 @@
-package com.zybooks.androidassignments
+package com.zybooks.androidassignments.ui
 
 import android.content.Context
 import android.os.Bundle
@@ -13,6 +13,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import com.zybooks.androidassignments.R
+import com.zybooks.androidassignments.model.Expense
 import kotlinx.coroutines.*
 import java.io.File
 

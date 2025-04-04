@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
+import com.zybooks.androidassignments.model.Expense
 
 class FooterFragment(private val expenses: List<Expense>) : Fragment() {
 

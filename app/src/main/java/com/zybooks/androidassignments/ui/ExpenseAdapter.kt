@@ -1,4 +1,4 @@
-package com.zybooks.androidassignments
+package com.zybooks.androidassignments.ui
 
 import android.view.LayoutInflater
 import android.view.View
@@ -7,6 +7,8 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.navigation.findNavController
 import androidx.recyclerview.widget.RecyclerView
+import com.zybooks.androidassignments.R
+import com.zybooks.androidassignments.model.Expense
 
 class ExpenseAdapter(
     private val expenseList: MutableList<Expense>,
