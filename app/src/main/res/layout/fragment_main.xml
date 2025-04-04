@@ -22,6 +22,25 @@
         android:layout_height="wrap_content"
         android:text="Add Expense" />
 
+    <Switch
+        android:id="@+id/switch_convert"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Conversion Needed" />
+
+    <Spinner
+        android:id="@+id/spinner_currency"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:entries="@array/currency_codes" />
+
+    <TextView
+        android:id="@+id/text_converted_cost"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Converted: $0.00" />
+
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/expenses"
         android:layout_width="match_parent"

@@ -6,14 +6,14 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Button
-import android.widget.EditText
+import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.zybooks.androidassignments.R
+import com.zybooks.androidassignments.model.CurrencyRateHolder
 import com.zybooks.androidassignments.model.Expense
 import kotlinx.coroutines.*
 import java.io.File
@@ -24,6 +24,10 @@ class MainFragment : Fragment() {
     private lateinit var amountInput: EditText
     private lateinit var addButton: Button
     private lateinit var recyclerView: RecyclerView
+    private lateinit var switchConvert: Switch
+    private lateinit var spinnerCurrency: Spinner
+    private lateinit var textConvertedCost: TextView
+
     private lateinit var adapter: ExpenseAdapter
     private var expenses = mutableListOf<Expense>()
 
@@ -45,9 +49,14 @@ class MainFragment : Fragment() {
         addButton = view.findViewById(R.id.add)
         recyclerView = view.findViewById(R.id.expenses)
 
-        adapter = ExpenseAdapter(expenses){
+        switchConvert = view.findViewById(R.id.switch_convert)
+        spinnerCurrency = view.findViewById(R.id.spinner_currency)
+        textConvertedCost = view.findViewById(R.id.text_converted_cost)
+
+        adapter = ExpenseAdapter(expenses) {
             saveExpensesToFile()
         }
+
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         recyclerView.adapter = adapter
 
@@ -58,11 +67,30 @@ class MainFragment : Fragment() {
             val amount = amountInput.text.toString().trim()
 
             if (name.isNotEmpty() && amount.isNotEmpty()) {
-                val expense = Expense(name, amount)
+                val currency = spinnerCurrency.selectedItem.toString()
+                var convertedAmount = 0.0
+
+                if (switchConvert.isChecked) {
+                    val amountDouble = amount.toDoubleOrNull() ?: 0.0
+                    val rate = CurrencyRateHolder.rates[currency] ?: 1.0
+                    convertedAmount = amountDouble * rate
+                }
+
+                val expense = Expense(
+                    name = name,
+                    totalAmount = amount,
+                    currency = currency,
+                    convertedCost = convertedAmount
+                )
+
                 expenses.add(expense)
                 adapter.notifyItemInserted(expenses.size - 1)
+
                 nameInput.text.clear()
                 amountInput.text.clear()
+
+                textConvertedCost.text = "Converted: $convertedAmount $currency"
+
                 saveExpensesToFile()
             }
         }

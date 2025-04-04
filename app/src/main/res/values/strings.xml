@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">AndroidAssignments</string>
+    <string-array name="currency_codes">
+        <item>CAD</item>
+        <item>EUR</item>
+        <item>USD</item>
+        <item>INR</item>
+    </string-array>
 </resources>
