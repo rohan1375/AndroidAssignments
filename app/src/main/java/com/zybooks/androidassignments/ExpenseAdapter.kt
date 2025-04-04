@@ -1,5 +1,6 @@
 package com.zybooks.androidassignments
 
+import android.content.Intent
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -7,25 +8,28 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
 
-class ExpenseAdapter(private val expenseList: MutableList<Expense>) :
-    RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
+class ExpenseAdapter(
+    private val expenseList: MutableList<Expense>
+) : RecyclerView.Adapter<ExpenseAdapter.ExpenseViewHolder>() {
 
     inner class ExpenseViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val expenseName: TextView = itemView.findViewById(R.id.name)
-        val expenseAmount: TextView = itemView.findViewById(R.id.totalAmount)
+        val nameView: TextView = itemView.findViewById(R.id.name)
+        val amountView: TextView = itemView.findViewById(R.id.totalAmount)
         val deleteButton: Button = itemView.findViewById(R.id.delete)
+        val detailsButton: Button = itemView.findViewById(R.id.showDetails)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExpenseViewHolder {
-        val itemView = LayoutInflater.from(parent.context)
+        val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_expense, parent, false)
-        return ExpenseViewHolder(itemView)
+        return ExpenseViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ExpenseViewHolder, position: Int) {
-        val currentExpense = expenseList[position]
-        holder.expenseName.text = currentExpense.name
-        holder.expenseAmount.text = currentExpense.totalAmount
+        val expense = expenseList[position]
+
+        holder.nameView.text = expense.name
+        holder.amountView.text = expense.totalAmount
 
         holder.deleteButton.setOnClickListener {
             val pos = holder.adapterPosition
@@ -33,6 +37,14 @@ class ExpenseAdapter(private val expenseList: MutableList<Expense>) :
                 expenseList.removeAt(pos)
                 notifyItemRemoved(pos)
             }
+        }
+
+        holder.detailsButton.setOnClickListener {
+            val context = holder.itemView.context
+            val intent = Intent(context, ExpenseDetailsActivity::class.java)
+            intent.putExtra("expenseName", expense.name)
+            intent.putExtra("expenseAmount", expense.totalAmount)
+            context.startActivity(intent)
         }
     }
 
