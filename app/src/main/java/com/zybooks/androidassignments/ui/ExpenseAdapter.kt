@@ -31,7 +31,13 @@ class ExpenseAdapter(
         val expense = expenseList[position]
 
         holder.name.text = expense.name
-        holder.amount.text = expense.totalAmount
+
+        // Show both original and converted amount
+        val baseAmount = expense.totalAmount
+        val converted = "%.2f".format(expense.convertedCost)
+        val currency = expense.currency
+
+        holder.amount.text = "Amount: $baseAmount CAD\nConverted: $converted $currency"
 
         holder.itemView.setOnClickListener {
             val action = MainFragmentDirections
@@ -44,7 +50,7 @@ class ExpenseAdapter(
             if (pos != RecyclerView.NO_POSITION) {
                 expenseList.removeAt(pos)
                 notifyItemRemoved(pos)
-                onItemDeleted() // Save the updated list to file
+                onItemDeleted()
             }
         }
     }

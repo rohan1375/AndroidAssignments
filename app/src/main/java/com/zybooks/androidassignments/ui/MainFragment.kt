@@ -15,7 +15,6 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.zybooks.androidassignments.R
-import com.zybooks.androidassignments.model.CurrencyResponse
 import com.zybooks.androidassignments.model.Expense
 import com.zybooks.androidassignments.network.CurrencyService
 import kotlinx.coroutines.*
@@ -27,6 +26,10 @@ class MainFragment : Fragment() {
     private lateinit var amountInput: EditText
     private lateinit var addButton: Button
     private lateinit var recyclerView: RecyclerView
+    private lateinit var switchConvert: Switch
+    private lateinit var textConvertedCost: TextView
+    private lateinit var spinnerCurrency: Spinner
+
     private lateinit var adapter: ExpenseAdapter
     private var expenses = mutableListOf<Expense>()
 
@@ -34,7 +37,6 @@ class MainFragment : Fragment() {
     private var fileJob: Job? = null
     private val fileName = "expenses.json"
 
-    // Currency variables
     private var currencyRates = mutableMapOf<String, Double>()
     private var selectedCurrency = "CAD"
 
@@ -47,15 +49,14 @@ class MainFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        // Views
         nameInput = view.findViewById(R.id.name)
         amountInput = view.findViewById(R.id.totalAmount)
         addButton = view.findViewById(R.id.add)
         recyclerView = view.findViewById(R.id.expenses)
-
-        // UI elements for currency conversion
-        val switchConvert = view.findViewById<Switch>(R.id.switch_convert)
-        val spinnerCurrency = view.findViewById<Spinner>(R.id.spinner_currency)
-        val textConvertedCost = view.findViewById<TextView>(R.id.text_converted_cost)
+        switchConvert = view.findViewById(R.id.switch_convert)
+        spinnerCurrency = view.findViewById(R.id.spinner_currency)
+        textConvertedCost = view.findViewById(R.id.text_converted_cost)
 
         adapter = ExpenseAdapter(expenses) {
             saveExpensesToFile()
@@ -66,55 +67,66 @@ class MainFragment : Fragment() {
 
         loadExpensesFromFile()
 
-        // Handle currency conversion switch
+        // Switch listener
         switchConvert.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                // Enable currency conversion
-                textConvertedCost.visibility = View.VISIBLE
-                updateConvertedCosts()
-            } else {
-                // Disable currency conversion
-                textConvertedCost.visibility = View.INVISIBLE
-            }
+            textConvertedCost.visibility = if (isChecked) View.VISIBLE else View.INVISIBLE
+            updateConvertedCosts()
         }
 
-        // Handle currency selection spinner
-        spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(parentView: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                selectedCurrency = parentView?.getItemAtPosition(position).toString()
-                updateConvertedCosts()
-            }
-
-            override fun onNothingSelected(parentView: AdapterView<*>?) {}
-        }
+        // Spinner listener will be set after rates are fetched
 
         addButton.setOnClickListener {
             val name = nameInput.text.toString().trim()
             val amount = amountInput.text.toString().trim()
 
             if (name.isNotEmpty() && amount.isNotEmpty()) {
-                val expense = Expense(name, amount)
+                val baseAmount = amount.toDoubleOrNull() ?: 0.0
+                val rate = currencyRates[selectedCurrency] ?: 1.0
+                val converted = baseAmount * rate
+
+                val expense = Expense(name, amount, selectedCurrency, converted)
                 expenses.add(expense)
                 adapter.notifyItemInserted(expenses.size - 1)
+
                 nameInput.text.clear()
                 amountInput.text.clear()
                 saveExpensesToFile()
             }
         }
-
-        // Fetch exchange rates when the fragment is created
+        // Fetch rates and setup spinner
         fetchCurrencyRates()
     }
 
-    // Fetch currency rates from the API
     private fun fetchCurrencyRates() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = CurrencyService.api.getRates()
                 currencyRates = response.rates.toMutableMap()
+                Log.d("CurrencyRates", "Rates loaded: ${currencyRates}")
+
 
                 withContext(Dispatchers.Main) {
-                    updateConvertedCosts()  // Update conversion once rates are fetched
+                    val adapter = ArrayAdapter(
+                        requireContext(),
+                        android.R.layout.simple_spinner_item,
+                        currencyRates.keys.sorted()
+                    )
+                    adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    spinnerCurrency.adapter = adapter
+                    spinnerCurrency.setSelection(0)
+
+                    spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                        override fun onItemSelected(
+                            parent: AdapterView<*>?, view: View?, position: Int, id: Long
+                        ) {
+                            selectedCurrency = parent?.getItemAtPosition(position).toString()
+                            updateConvertedCosts()
+                        }
+
+                        override fun onNothingSelected(parent: AdapterView<*>?) {}
+                    }
+
+                    updateConvertedCosts()
                 }
             } catch (e: Exception) {
                 Log.e("MainFragment", "Error fetching currency rates: ${e.message}")
@@ -123,32 +135,30 @@ class MainFragment : Fragment() {
         }
     }
 
-    // Update converted costs based on selected currency
     private fun updateConvertedCosts() {
-        val switchConvert = view?.findViewById<Switch>(R.id.switch_convert)
-        val textConvertedCost = view?.findViewById<TextView>(R.id.text_converted_cost)
+        if (switchConvert.isChecked && currencyRates.isNotEmpty()) {
+            val rate = currencyRates[selectedCurrency] ?: 1.0
 
-        if (switchConvert?.isChecked == true && currencyRates.isNotEmpty()) {
             expenses.forEach { expense ->
-                val rate = currencyRates[selectedCurrency] ?: 1.0
-                val convertedAmount = expense.totalAmount.toDouble() * rate
-                expense.convertedCost = convertedAmount
+                val baseAmount = expense.totalAmount.toDoubleOrNull() ?: 0.0
+                expense.convertedCost = baseAmount * rate
+                expense.currency = selectedCurrency
             }
+
             adapter.notifyDataSetChanged()
 
-            // Show the converted cost for the first expense as an example
             if (expenses.isNotEmpty()) {
-                textConvertedCost?.text = "Converted cost: ${expenses[0].convertedCost} $selectedCurrency"
+                val lastConverted = expenses.last().convertedCost
+                textConvertedCost.text = "Converted: %.2f %s".format(lastConverted, selectedCurrency)
+            } else {
+                textConvertedCost.text = "No expenses to convert"
             }
         }
     }
 
-
-    // Save expenses to file
     private fun saveExpensesToFile() {
         lifecycleScope.launch {
             try {
-                // Background operation to save expenses to file
                 withContext(Dispatchers.IO) {
                     val json = gson.toJson(expenses)
                     requireContext().openFileOutput(fileName, Context.MODE_PRIVATE).use {
@@ -156,12 +166,10 @@ class MainFragment : Fragment() {
                     }
                 }
 
-                // Show success message on the main thread
                 withContext(Dispatchers.Main) {
                     Snackbar.make(requireView(), "Expenses saved successfully.", Snackbar.LENGTH_SHORT).show()
                 }
             } catch (e: Exception) {
-                // Handle errors on the main thread
                 withContext(Dispatchers.Main) {
                     Snackbar.make(requireView(), "Error saving file: ${e.message}", Snackbar.LENGTH_LONG).show()
                 }
@@ -169,8 +177,6 @@ class MainFragment : Fragment() {
         }
     }
 
-
-    // Load expenses from file
     private fun loadExpensesFromFile() {
         fileJob = CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -191,13 +197,12 @@ class MainFragment : Fragment() {
             }
         }
     }
-    // Show error message in case of failure
+
     private fun showErrorToast() {
         CoroutineScope(Dispatchers.Main).launch {
             Toast.makeText(requireContext(), "Error fetching currency data", Toast.LENGTH_SHORT).show()
         }
     }
-
 
     override fun onDestroyView() {
         super.onDestroyView()
