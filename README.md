@@ -106,3 +106,8 @@
   - `network/` → Retrofit setup  
   - `work/` → WorkManager  
   - `service/` → Services & BroadcastReceivers
+ 
+
+
+
+Model Helper Fragmnent adapter
